@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dapid Dev | Social Hub</title>
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"></noscript>
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
-    <link rel="preload" href="https://files.catbox.moe/mc4oeu.mp3" as="audio">
-    <link rel="preload" href="https://files.catbox.moe/o57scp.jpg" as="image">
+    <!-- Preload dengan teknik yang lebih efisien -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" as="style">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" media="print" onload="this.media='all'">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     <style>
         :root {
             --primary: #8a2be2;
@@ -53,7 +52,7 @@
             }
         }
 
-        /* BACKGROUND VIDEO - MUTLAK TIDAK KOMPROMI */
+        /* BACKGROUND VIDEO - OPTIMASI UNTUK MOBILE */
         .background-video-wrapper {
             position: fixed;
             top: 0;
@@ -77,7 +76,6 @@
             background-color: #0a0a1a;
             filter: brightness(1.1) contrast(1.15) saturate(1.25);
             opacity: 1;
-            will-change: transform;
             display: block !important;
         }
 
@@ -551,7 +549,7 @@
             transform: scale(0.95);
         }
 
-        /* Responsive */
+        /* Responsive Optimizations */
         @media (max-width: 768px) {
             .main-title {
                 font-size: 2rem;
@@ -584,6 +582,17 @@
                     rgba(10, 5, 20, 0.6) 0%,
                     rgba(20, 10, 40, 0.55) 100%);
             }
+
+            /* Reduce GPU load on mobile */
+            .social-btn::before,
+            .glow-ring {
+                animation-duration: 8s;
+            }
+            
+            .welcome-content,
+            .social-btn {
+                backdrop-filter: blur(5px);
+            }
         }
 
         /* High contrast mode support */
@@ -606,9 +615,9 @@
     </style>
 </head>
 <body>
-    <!-- BACKGROUND VIDEO - MUTLAK HARUS ADA -->
+    <!-- BACKGROUND VIDEO - OPTIMASI UNTUK MOBILE -->
     <div class="background-video-wrapper">
-        <video id="bg-video" autoplay muted loop playsinline preload="auto"
+        <video id="bg-video" autoplay muted loop playsinline preload="metadata"
                crossorigin="anonymous" aria-hidden="true">
             <source src="https://files.catbox.moe/cj5z4p.mp4" type="video/mp4">
             <!-- Video backup - resolusi ringan, pasti bisa di HP low-end -->
@@ -767,27 +776,56 @@
 
     <script>
         // ==============================================
-        // BACKGROUND VIDEO SYSTEM - TIDAK ADA KOMPROMI
+        // GLOBAL STATE MANAGEMENT
         // ==============================================
+        let appState = {
+            video: {
+                attempts: 0,
+                maxAttempts: 12,
+                isPlaying: false,
+                hasError: false
+            },
+            audio: {
+                started: false,
+                allowed: false
+            },
+            loading: {
+                isComplete: false,
+                resourcesLoaded: 0,
+                totalResources: 3 // video, AOS, font awesome
+            }
+        };
 
-        // Single source of truth untuk audio management
+        // ==============================================
+        // BACKGROUND AUDIO SYSTEM - OPTIMIZED
+        // ==============================================
         const bgMusic = document.getElementById('bg-music');
-        let audioStarted = false;
-
+        
         function startAudio() {
-            if (audioStarted) return;
+            if (appState.audio.started || !appState.audio.allowed) return;
             
-            bgMusic.play()
-                .then(() => {
-                    console.log('Background music started');
-                    audioStarted = true;
-                })
-                .catch(error => {
-                    console.log('Audio playback failed:', error);
-                });
+            const playPromise = bgMusic.play();
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        appState.audio.started = true;
+                        console.log('Background music started');
+                    })
+                    .catch(error => {
+                        console.log('Audio playback failed:', error.name);
+                    });
+            }
         }
 
-        // Setup AOS
+        // Single unified audio trigger
+        function enableAudioPlayback() {
+            appState.audio.allowed = true;
+            startAudio();
+        }
+
+        // ==============================================
+        // AOS ANIMATION SYSTEM
+        // ==============================================
         function loadAOS() {
             const script = document.createElement('script');
             script.src = 'https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js';
@@ -809,175 +847,134 @@
                 throttleDelay: 99,
                 debounceDelay: 50
             });
+            
+            markResourceLoaded();
         }
 
         // ==============================================
-        // VIDEO BACKGROUND - MUTLAK HARUS BERJALAN
+        // VIDEO BACKGROUND SYSTEM - OPTIMIZED
         // ==============================================
-
-        let videoPlayAttempts = 0;
-        const MAX_VIDEO_ATTEMPTS = 999; // TIDAK ADA BATAS MAKSIMAL
-
         function setupVideoBackground() {
             const video = document.getElementById('bg-video');
             const fallback = document.getElementById('videoFallback');
 
-            console.log('🚀 Initializing ABSOLUTE VIDEO SYSTEM');
+            console.log('🚀 Initializing optimized video system');
 
-            // 1. HAPUS semua fallback prematur
-            // 2. FOKUS hanya pada video utama
-
-            // Fungsi untuk MEMAKSA video play
-            function forceVideoPlay() {
-                if (videoPlayAttempts > 100) {
-                    console.log(`🎬 Video attempt ${videoPlayAttempts} - NEVER GIVE UP`);
+            // Optimized play function with limited retries
+            function attemptVideoPlay() {
+                if (appState.video.hasError || appState.video.attempts >= appState.video.maxAttempts) {
+                    console.log('Video playback failed, activating fallback');
+                    fallback.classList.add('active');
+                    video.style.display = 'none';
+                    markResourceLoaded();
+                    return;
                 }
 
+                appState.video.attempts++;
+                
                 video.play()
                     .then(() => {
                         console.log('✅ Video playing successfully');
-                        videoPlayAttempts = 0;
-                        
-                        // Pastikan video visible
+                        appState.video.isPlaying = true;
+                        appState.video.attempts = 0;
                         video.style.opacity = '1';
-                        video.style.display = 'block';
-                        
-                        // Matikan fallback jika aktif
                         fallback.classList.remove('active');
+                        markResourceLoaded();
                     })
                     .catch(error => {
-                        videoPlayAttempts++;
+                        console.log(`Video play attempt ${appState.video.attempts} failed:`, error.name);
                         
-                        // JANGAN PERNAH MENYERAH
-                        console.log(`🔄 Video play attempt ${videoPlayAttempts} failed:`, error.name);
-                        
-                        // Reset video dan coba lagi
-                        video.load();
-                        
-                        // Tunggu sebentar, lalu coba lagi
-                        setTimeout(() => {
-                            forceVideoPlay();
-                        }, videoPlayAttempts < 10 ? 300 : 1000);
+                        // Wait before retrying with exponential backoff
+                        const delay = Math.min(500 * appState.video.attempts, 2000);
+                        setTimeout(attemptVideoPlay, delay);
                     });
             }
 
-            // Event listener untuk error video (HANYA fatal error)
+            // Event-driven video management
+            video.addEventListener('loadeddata', function() {
+                console.log('Video data loaded, attempting play');
+                attemptVideoPlay();
+            });
+
             video.addEventListener('error', function(e) {
-                console.log('🚨 VIDEO FATAL ERROR:', video.error);
+                console.log('Video error:', video.error);
                 
-                // Cek jika error benar-benar fatal (404, codec, etc)
-                if (video.error && video.error.code === 4) {
-                    console.log('⚠️ Activating fallback ONLY for fatal error');
+                // Fatal error handling
+                if (video.error && (video.error.code === 4 || video.networkState === 3)) {
+                    appState.video.hasError = true;
+                    console.log('Fatal video error, activating fallback');
                     fallback.classList.add('active');
-                } else {
-                    // Error non-fatal, coba lagi
-                    setTimeout(() => {
-                        video.load();
-                        forceVideoPlay();
-                    }, 500);
+                    markResourceLoaded();
                 }
             });
 
-            // Monitor jika video berhenti (stalled)
             video.addEventListener('stalled', function() {
-                console.log('🔧 Video stalled, restarting...');
-                video.load();
-                forceVideoPlay();
-            });
-
-            // Monitor jika video selesai (tapi loop harusnya mencegah ini)
-            video.addEventListener('ended', function() {
-                console.log('🔄 Video ended, restarting loop...');
-                video.currentTime = 0;
-                forceVideoPlay();
+                console.log('Video stalled, attempting recovery');
+                if (!appState.video.isPlaying && appState.video.attempts < appState.video.maxAttempts) {
+                    video.load();
+                    setTimeout(attemptVideoPlay, 500);
+                }
             });
 
             // Tab visibility management
             document.addEventListener('visibilitychange', function() {
                 if (document.hidden) {
-                    // Tab disembunyikan - pause video
                     video.pause();
-                } else {
-                    // Tab aktif lagi - mainkan ulang
-                    console.log('👁️ Tab visible again, restarting video');
-                    forceVideoPlay();
+                } else if (appState.video.isPlaying && !video.paused) {
+                    video.play().catch(() => {
+                        // Silent catch for background tab resume
+                    });
                 }
             });
 
-            // ==============================================
-            // TRIGGER AUTOPLAY DENGAN SEMUA EVENT MUNGKIN
-            // ==============================================
-
-            // Trigger video play saat:
-            // 1. Halaman load
-            // 2. User scroll
-            // 3. User click/tap
-            // 4. User touch
-            // 5. Window focus
-
-            // Initial play
-            setTimeout(() => {
-                forceVideoPlay();
-            }, 100);
-
-            // Play pada scroll
-            let scrollPlayAttempted = false;
-            window.addEventListener('scroll', function() {
-                if (!scrollPlayAttempted && video.paused) {
-                    scrollPlayAttempted = true;
-                    console.log('📜 Scroll detected, triggering video play');
-                    forceVideoPlay();
-                }
-            }, { passive: true });
-
-            // Play pada semua click/tap
-            document.addEventListener('click', function() {
-                if (video.paused) {
-                    console.log('🖱️ Click detected, triggering video play');
-                    forceVideoPlay();
-                }
-            }, { once: false });
-
-            // Play pada touch (mobile)
-            document.addEventListener('touchstart', function() {
-                if (video.paused) {
-                    console.log('📱 Touch detected, triggering video play');
-                    forceVideoPlay();
-                }
-            }, { passive: true });
-
-            // Play saat window focus
-            window.addEventListener('focus', function() {
-                if (video.paused) {
-                    console.log('🎯 Window focus detected, triggering video play');
-                    forceVideoPlay();
-                }
-            });
-
-            // Periodic check untuk memastikan video tetap jalan
-            setInterval(() => {
-                if (video.paused && !document.hidden) {
-                    console.log('🕐 Periodic check: Video paused, restarting...');
-                    forceVideoPlay();
-                }
-                
-                // Monitor video health
-                if (video.readyState >= 2 && video.currentTime > 0) {
-                    // Video sehat, pastikan fallback mati
-                    fallback.classList.remove('active');
-                }
-            }, 5000); // Check setiap 5 detik
-
-            // Force play sekali lagi setelah 2 detik
-            setTimeout(() => {
-                if (video.paused) {
-                    console.log('⏱️ 2-second safety check: Video still paused, forcing play');
-                    forceVideoPlay();
-                }
-            }, 2000);
+            // Initial load
+            video.load();
         }
 
-        // Fullscreen image functionality
+        // ==============================================
+        // LOADING SYSTEM - RESOURCE BASED
+        // ==============================================
+        function markResourceLoaded() {
+            appState.loading.resourcesLoaded++;
+            checkLoadingComplete();
+        }
+
+        function checkLoadingComplete() {
+            if (appState.loading.isComplete) return;
+            
+            // Consider loaded when either:
+            // 1. All resources loaded, OR
+            // 2. Window loaded and at least video attempted
+            const windowLoaded = document.readyState === 'complete';
+            const resourcesDone = appState.loading.resourcesLoaded >= appState.loading.totalResources;
+            const videoAttempted = appState.video.attempts > 0;
+            
+            if ((windowLoaded && videoAttempted) || resourcesDone) {
+                completeLoading();
+            }
+        }
+
+        function completeLoading() {
+            if (appState.loading.isComplete) return;
+            
+            appState.loading.isComplete = true;
+            const loadingScreen = document.getElementById('loading');
+            
+            // Hide loading screen
+            loadingScreen.classList.add('hidden');
+            
+            // Show welcome modal with slight delay for smooth transition
+            setTimeout(() => {
+                const welcomeModal = document.getElementById('welcomeModal');
+                welcomeModal.classList.remove('hidden');
+            }, 300);
+            
+            console.log('Page loading complete');
+        }
+
+        // ==============================================
+        // FULLSCREEN IMAGE FUNCTIONALITY
+        // ==============================================
         function setupProfileImage() {
             const profilePhotoContainer = document.getElementById('profilePhotoContainer');
             const profilePhoto = document.getElementById('profilePhoto');
@@ -1012,64 +1009,71 @@
             });
         }
 
-        // Main initialization
+        // ==============================================
+        // MAIN INITIALIZATION
+        // ==============================================
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing app');
+            
+            // Load AOS animations
             loadAOS();
+            
+            // Setup profile image functionality
             setupProfileImage();
             
-            // INIT VIDEO SYSTEM - TIDAK BOLEH GAGAL
-            setTimeout(() => {
-                setupVideoBackground();
-            }, 50);
-
-            // Sembunyikan loading screen dan tampilkan main content
-            setTimeout(() => {
-                document.getElementById('loading').classList.add('hidden');
-                
-                // Tampilkan welcome modal
-                setTimeout(() => {
-                    document.getElementById('welcomeModal').classList.remove('hidden');
-                    AOS.refresh();
-                }, 50);
-            }, 800);
-
-            // Setup welcome modal close button
+            // Setup video background
+            setupVideoBackground();
+            
+            // Setup welcome modal
             const closeWelcomeBtn = document.getElementById('closeWelcome');
             const welcomeModal = document.getElementById('welcomeModal');
-
+            
             closeWelcomeBtn.addEventListener('click', function() {
                 welcomeModal.classList.add('hidden');
-                startAudio(); // Start audio saat modal ditutup
+                enableAudioPlayback();
             });
 
-            // Start audio pada klik pertama di halaman
-            let pageClicked = false;
-            document.addEventListener('click', function() {
-                if (!pageClicked && !audioStarted) {
-                    pageClicked = true;
-                    startAudio();
-                }
-            }, { once: true });
+            // Mark font awesome as loaded
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(() => {
+                    markResourceLoaded();
+                });
+            } else {
+                // Fallback
+                setTimeout(() => markResourceLoaded(), 500);
+            }
+
+            // Single audio trigger on first user interaction
+            document.addEventListener('click', enableAudioPlayback, { once: true });
+            document.addEventListener('touchstart', enableAudioPlayback, { once: true });
+            document.addEventListener('scroll', enableAudioPlayback, { once: true, passive: true });
+
+            // Check window load state
+            window.addEventListener('load', checkLoadingComplete);
         });
 
-        // Error handling untuk audio
+        // ==============================================
+        // ERROR HANDLING
+        // ==============================================
         bgMusic.addEventListener('error', function() {
             console.log('Background music failed to load');
+            appState.audio.allowed = false;
         });
 
-        // Security measures (tetap dipertahankan)
+        // ==============================================
+        // SECURITY MEASURES (Low overhead)
+        // ==============================================
         document.addEventListener('contextmenu', function(e) {
             e.preventDefault();
-        });
+        }, { passive: false });
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'F12' || 
                 (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
                 (e.ctrlKey && e.key === 'u')) {
                 e.preventDefault();
-                return false;
             }
-        });
+        }, { passive: false });
     </script>
 </body>
 </html>
