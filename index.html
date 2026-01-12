@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dapid AE02 | Social Hub</title>
+    <title>Dapid Dev | Social Hub</title>
     <!-- AOS CSS (Non-blocking) -->
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"></noscript>
@@ -455,40 +455,6 @@
             transform: rotate(90deg) scale(0.95);
         }
 
-        /* Audio Control Button */
-        .audio-control {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--card-bg);
-            border: 1px solid var(--glass-border);
-            color: var(--text-light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 100;
-            font-size: 1.4rem;
-            transition: all var(--transition-normal) ease;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            outline: none;
-        }
-
-        .audio-control:hover {
-            transform: scale(1.1);
-            background: var(--primary);
-            box-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
-        }
-
-        .audio-control.playing {
-            color: var(--secondary);
-            box-shadow: 0 0 20px rgba(0, 229, 255, 0.5);
-        }
-
         /* Responsive */
         @media (max-width: 768px) {
             .container {
@@ -527,14 +493,6 @@
                 top: -50px;
                 right: 0;
             }
-
-            .audio-control {
-                bottom: 20px;
-                right: 20px;
-                width: 45px;
-                height: 45px;
-                font-size: 1.2rem;
-            }
         }
 
         @media (max-width: 480px) {
@@ -565,14 +523,6 @@
             .social-name {
                 font-size: 1.1rem;
             }
-
-            .audio-control {
-                bottom: 15px;
-                right: 15px;
-                width: 40px;
-                height: 40px;
-                font-size: 1.1rem;
-            }
         }
     </style>
 </head>
@@ -595,11 +545,6 @@
         <source src="audio.mp3" type="audio/mpeg">
         Your browser does not support the audio element.
     </audio>
-    
-    <!-- Audio Control Button -->
-    <button class="audio-control" id="audioControl" aria-label="Toggle background music">
-        <i class="fas fa-volume-mute"></i>
-    </button>
     
     <!-- Fullscreen Image Overlay -->
     <div class="fullscreen-overlay" id="fullscreenOverlay">
@@ -687,7 +632,7 @@
                 </a>
                 
                 <!-- Discord -->
-                <a href="https://discord.com/users/dapid_ae02" target="_blank" class="social-btn discord"
+                <a href="https://discord.com/users/dafid.id" target="_blank" class="social-btn discord"
                    data-aos="fade-up" data-aos-duration="400" data-aos-delay="350">
                     <div class="social-icon">
                         <i class="fab fa-discord"></i>
@@ -749,18 +694,128 @@
                 duration: prefersReducedMotion ? 0 : 400,
                 offset: 100,
                 delay: 0,
-                once: true, // Animation only once for better performance
-                mirror: false, // No animation on scroll back up for better performance
-                disable: prefersReducedMotion ? true : false, // Disable on reduced motion
-                throttleDelay: 99, // Better scroll performance
-                debounceDelay: 50 // Better resize performance
+                once: true,
+                mirror: false,
+                disable: prefersReducedMotion ? true : false,
+                throttleDelay: 99,
+                debounceDelay: 50
             });
         }
+        
+        // Profile Image Readiness Handler
+        let profileImageReady = false;
+        let profileImageCheckCount = 0;
+        const MAX_IMAGE_CHECK_COUNT = 10;
+        
+        function handleProfileImageReady() {
+            if (profileImageReady) return;
+            
+            const img = document.getElementById('profilePhoto');
+            const container = document.getElementById('profilePhotoContainer');
+            
+            // Check if image is already loaded from cache
+            if (img.complete && img.naturalWidth > 0) {
+                console.log('Profile image loaded from cache');
+                profileImageReady = true;
+                ensureFullscreenFunctionality();
+                return;
+            }
+            
+            // Check with timeout for loading images
+            if (profileImageCheckCount < MAX_IMAGE_CHECK_COUNT) {
+                profileImageCheckCount++;
+                setTimeout(handleProfileImageReady, 100);
+            } else {
+                // Fallback after max checks
+                console.log('Profile image loading timeout, using fallback');
+                ensureFullscreenFunctionality();
+            }
+        }
+        
+        function ensureFullscreenFunctionality() {
+            // Always ensure fullscreen click works
+            const profilePhotoContainer = document.getElementById('profilePhotoContainer');
+            const profilePhoto = document.getElementById('profilePhoto');
+            
+            // Remove any previous event listeners to avoid duplicates
+            const newContainer = profilePhotoContainer.cloneNode(true);
+            profilePhotoContainer.parentNode.replaceChild(newContainer, profilePhotoContainer);
+            
+            // Reattach click event
+            newContainer.addEventListener('click', function() {
+                const fullscreenImage = document.getElementById('fullscreenImage');
+                const fullscreenOverlay = document.getElementById('fullscreenOverlay');
+                
+                // Use the current src or fallback to gradient
+                fullscreenImage.src = profilePhoto.src || '';
+                fullscreenOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+        }
+        
+        // Audio Autoplay System
+        const bgMusic = document.getElementById('bg-music');
+        let audioTriggered = false;
+        
+        // Set default volume
+        bgMusic.volume = 0.25;
+        
+        // Load audio state from localStorage
+        const savedAudioState = localStorage.getItem('dapidAudioState');
+        
+        function triggerAudioPlayback() {
+            if (audioTriggered) return;
+            
+            audioTriggered = true;
+            
+            // Remove all trigger listeners
+            ['scroll', 'click', 'touchstart', 'keydown'].forEach(eventType => {
+                document.removeEventListener(eventType, triggerAudioPlayback);
+            });
+            
+            // Play audio if it was playing before or start fresh
+            if (savedAudioState === 'playing') {
+                bgMusic.currentTime = 0;
+            }
+            
+            bgMusic.play().then(() => {
+                console.log('Background music started');
+                localStorage.setItem('dapidAudioState', 'playing');
+            }).catch(e => {
+                console.log('Audio playback failed:', e);
+                // Don't retry on failure
+            });
+        }
+        
+        // Setup trigger events
+        ['scroll', 'click', 'touchstart', 'keydown'].forEach(eventType => {
+            document.addEventListener(eventType, triggerAudioPlayback, { once: false });
+        });
         
         // Initialize when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
             // Start loading AOS
             loadAOS();
+            
+            // Initialize profile image handling
+            const profilePhoto = document.getElementById('profilePhoto');
+            
+            // Set up onload handler
+            profilePhoto.onload = function() {
+                console.log('Profile image loaded successfully');
+                profileImageReady = true;
+                ensureFullscreenFunctionality();
+            };
+            
+            // Set up onerror handler
+            profilePhoto.onerror = function() {
+                console.log('Profile image failed to load, using gradient fallback');
+                // Don't hide the container - CSS gradient will show
+                ensureFullscreenFunctionality();
+            };
+            
+            // Check image readiness
+            handleProfileImageReady();
             
             // Loading screen removal
             setTimeout(function() {
@@ -783,31 +838,10 @@
             document.querySelector('.video-overlay').style.background = 'linear-gradient(135deg, #0a0a1a 0%, #1a0a2a 100%)';
         });
 
-        // Profile Image Handler
-        const profilePhoto = document.getElementById('profilePhoto');
-        const profilePhotoContainer = document.getElementById('profilePhotoContainer');
+        // Fullscreen Image System
         const fullscreenOverlay = document.getElementById('fullscreenOverlay');
         const fullscreenImage = document.getElementById('fullscreenImage');
         const closeFullscreen = document.getElementById('closeFullscreen');
-
-        // Image load success
-        profilePhoto.onload = function() {
-            console.log('Profile image loaded successfully');
-        };
-
-        // Image load error handling
-        profilePhoto.onerror = function() {
-            console.log('Profile image failed to load, using gradient fallback');
-            profilePhoto.style.display = 'none';
-            // Fallback already handled by CSS gradient background
-        };
-
-        // Open fullscreen overlay
-        profilePhotoContainer.addEventListener('click', function() {
-            fullscreenImage.src = profilePhoto.src;
-            fullscreenOverlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        });
 
         // Close fullscreen overlay
         function closeFullscreenOverlay() {
@@ -892,83 +926,9 @@
         `;
         document.head.appendChild(rippleStyle);
         
-        // Audio Control System
-        const bgMusic = document.getElementById('bg-music');
-        const audioControl = document.getElementById('audioControl');
-        const audioIcon = audioControl.querySelector('i');
-        
-        // Set default volume (low)
-        bgMusic.volume = 0.25;
-        
-        // Load audio state from localStorage
-        const savedAudioState = localStorage.getItem('dapidAudioState');
-        if (savedAudioState === 'playing') {
-            bgMusic.currentTime = 0;
-            // Don't auto-play - wait for user interaction
-        }
-        
-        // Update audio control icon
-        function updateAudioIcon() {
-            if (bgMusic.paused) {
-                audioIcon.className = 'fas fa-volume-mute';
-                audioControl.classList.remove('playing');
-            } else {
-                audioIcon.className = 'fas fa-volume-up';
-                audioControl.classList.add('playing');
-            }
-        }
-        
-        // Toggle audio playback
-        function toggleAudio() {
-            if (bgMusic.paused) {
-                bgMusic.play().then(() => {
-                    localStorage.setItem('dapidAudioState', 'playing');
-                    updateAudioIcon();
-                }).catch(e => {
-                    console.log('Audio playback failed:', e);
-                });
-            } else {
-                bgMusic.pause();
-                localStorage.setItem('dapidAudioState', 'paused');
-                updateAudioIcon();
-            }
-        }
-        
-        // Audio control button click
-        audioControl.addEventListener('click', toggleAudio);
-        
-        // Enable audio on first user interaction with the page
-        let audioEnabled = false;
-        function enableAudioOnInteraction() {
-            if (!audioEnabled) {
-                audioEnabled = true;
-                
-                // If audio was playing before, resume it
-                if (localStorage.getItem('dapidAudioState') === 'playing') {
-                    bgMusic.play().then(() => {
-                        updateAudioIcon();
-                    }).catch(e => {
-                        console.log('Audio resume failed:', e);
-                    });
-                }
-                
-                // Remove event listeners after first interaction
-                document.removeEventListener('click', enableAudioOnInteraction);
-                document.removeEventListener('touchstart', enableAudioOnInteraction);
-            }
-        }
-        
-        // Listen for first user interaction
-        document.addEventListener('click', enableAudioOnInteraction);
-        document.addEventListener('touchstart', enableAudioOnInteraction);
-        
-        // Initialize audio icon
-        updateAudioIcon();
-        
         // Handle audio errors
         bgMusic.addEventListener('error', function() {
             console.log('Background music failed to load');
-            audioControl.style.display = 'none'; // Hide audio control if music fails
         });
         
         // Anti-inspect protection (basic)
