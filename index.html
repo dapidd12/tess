@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dapid AE02 | Social Hub</title>
+    <title>Dapid Dev | Social Hub</title>
     <!-- AOS CSS (Non-blocking) -->
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"></noscript>
@@ -455,6 +455,40 @@
             transform: rotate(90deg) scale(0.95);
         }
 
+        /* Audio Control Button */
+        .audio-control {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            font-size: 1.4rem;
+            transition: all var(--transition-normal) ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            outline: none;
+        }
+
+        .audio-control:hover {
+            transform: scale(1.1);
+            background: var(--primary);
+            box-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
+        }
+
+        .audio-control.playing {
+            color: var(--secondary);
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.5);
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .container {
@@ -493,6 +527,14 @@
                 top: -50px;
                 right: 0;
             }
+
+            .audio-control {
+                bottom: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+                font-size: 1.2rem;
+            }
         }
 
         @media (max-width: 480px) {
@@ -523,13 +565,22 @@
             .social-name {
                 font-size: 1.1rem;
             }
+
+            .audio-control {
+                bottom: 15px;
+                right: 15px;
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Video Background (Lazy Loading) -->
-    <video autoplay muted loop playsinline id="bg-video" preload="metadata" loading="lazy">
-        <source src="https://files.catbox.moe/njpzs7.mp4" type="video/mp4">
+    <!-- Video Background (Local File) -->
+    <video autoplay muted loop playsinline id="bg-video" preload="metadata">
+        <source src="background.mp4" type="video/mp4">
+        Your browser does not support the video tag.
     </video>
     <div class="video-overlay"></div>
     
@@ -538,6 +589,17 @@
         <div class="spinner"></div>
         <p>Loading Dapid's Social Hub...</p>
     </div>
+    
+    <!-- Audio Element (Background Music) -->
+    <audio id="bg-music" preload="metadata" loop>
+        <source src="audio.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    
+    <!-- Audio Control Button -->
+    <button class="audio-control" id="audioControl" aria-label="Toggle background music">
+        <i class="fas fa-volume-mute"></i>
+    </button>
     
     <!-- Fullscreen Image Overlay -->
     <div class="fullscreen-overlay" id="fullscreenOverlay">
@@ -553,7 +615,7 @@
         <section class="hero-section" data-aos="fade-up" data-aos-duration="600" data-aos-delay="100">
             <div class="profile-photo-container" id="profilePhotoContainer" data-aos="zoom-in" data-aos-duration="500">
                 <div class="glow-ring"></div>
-                <img src="https://files.catbox.moe/o57scp.jpg" 
+                <img src="profile.jpg" 
                      alt="Dapid Profile Photo" 
                      class="profile-photo" 
                      id="profilePhoto"
@@ -730,7 +792,7 @@
 
         // Image load success
         profilePhoto.onload = function() {
-            console.log('Profile image loaded successfully from Catbox');
+            console.log('Profile image loaded successfully');
         };
 
         // Image load error handling
@@ -829,6 +891,85 @@
             }
         `;
         document.head.appendChild(rippleStyle);
+        
+        // Audio Control System
+        const bgMusic = document.getElementById('bg-music');
+        const audioControl = document.getElementById('audioControl');
+        const audioIcon = audioControl.querySelector('i');
+        
+        // Set default volume (low)
+        bgMusic.volume = 0.25;
+        
+        // Load audio state from localStorage
+        const savedAudioState = localStorage.getItem('dapidAudioState');
+        if (savedAudioState === 'playing') {
+            bgMusic.currentTime = 0;
+            // Don't auto-play - wait for user interaction
+        }
+        
+        // Update audio control icon
+        function updateAudioIcon() {
+            if (bgMusic.paused) {
+                audioIcon.className = 'fas fa-volume-mute';
+                audioControl.classList.remove('playing');
+            } else {
+                audioIcon.className = 'fas fa-volume-up';
+                audioControl.classList.add('playing');
+            }
+        }
+        
+        // Toggle audio playback
+        function toggleAudio() {
+            if (bgMusic.paused) {
+                bgMusic.play().then(() => {
+                    localStorage.setItem('dapidAudioState', 'playing');
+                    updateAudioIcon();
+                }).catch(e => {
+                    console.log('Audio playback failed:', e);
+                });
+            } else {
+                bgMusic.pause();
+                localStorage.setItem('dapidAudioState', 'paused');
+                updateAudioIcon();
+            }
+        }
+        
+        // Audio control button click
+        audioControl.addEventListener('click', toggleAudio);
+        
+        // Enable audio on first user interaction with the page
+        let audioEnabled = false;
+        function enableAudioOnInteraction() {
+            if (!audioEnabled) {
+                audioEnabled = true;
+                
+                // If audio was playing before, resume it
+                if (localStorage.getItem('dapidAudioState') === 'playing') {
+                    bgMusic.play().then(() => {
+                        updateAudioIcon();
+                    }).catch(e => {
+                        console.log('Audio resume failed:', e);
+                    });
+                }
+                
+                // Remove event listeners after first interaction
+                document.removeEventListener('click', enableAudioOnInteraction);
+                document.removeEventListener('touchstart', enableAudioOnInteraction);
+            }
+        }
+        
+        // Listen for first user interaction
+        document.addEventListener('click', enableAudioOnInteraction);
+        document.addEventListener('touchstart', enableAudioOnInteraction);
+        
+        // Initialize audio icon
+        updateAudioIcon();
+        
+        // Handle audio errors
+        bgMusic.addEventListener('error', function() {
+            console.log('Background music failed to load');
+            audioControl.style.display = 'none'; // Hide audio control if music fails
+        });
         
         // Anti-inspect protection (basic)
         document.addEventListener('contextmenu', function(e) {
