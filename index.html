@@ -266,6 +266,7 @@
             padding-top: 20px;
         }
 
+        /* PROFILE PHOTO - NEON SNAKE EFFECT (REVISED) */
         .profile-photo-container {
             position: relative;
             width: 200px;
@@ -279,6 +280,10 @@
             transform: scale(1.04);
         }
 
+        .profile-photo-container:hover::before {
+            animation-duration: 4s;
+        }
+
         .profile-photo-container:active {
             transform: scale(0.98);
         }
@@ -290,33 +295,30 @@
             object-fit: cover;
             position: relative;
             z-index: 2;
-            box-shadow: 0 0 30px rgba(138, 43, 226, 0.4);
             background: linear-gradient(135deg, var(--primary), var(--secondary));
         }
 
-        .glow-ring {
+        /* Neon snake ring effect (REVISED) */
+        .profile-photo-container::before {
+            content: '';
             position: absolute;
-            top: -12px;
-            left: -12px;
-            right: -12px;
-            bottom: -12px;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
             border-radius: 50%;
             background: conic-gradient(
                 from 0deg,
-                var(--primary),
-                var(--secondary),
-                var(--accent),
-                var(--primary)
+                transparent 0deg 120deg,
+                var(--secondary) 120deg 180deg,
+                var(--primary) 180deg 240deg,
+                var(--secondary) 240deg 300deg,
+                transparent 300deg 360deg
             );
-            animation: rotate-glow 6s linear infinite;
+            animation: rotate-snake 6s linear infinite;
             z-index: 1;
-            opacity: 0.7;
-            filter: blur(12px);
-        }
-
-        @keyframes rotate-glow {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            filter: blur(4px);
+            opacity: 0.8;
         }
 
         .title-section {
@@ -343,7 +345,7 @@
             line-height: 1.6;
         }
 
-        /* Social Buttons dengan Interaktifitas Ditingkatkan */
+        /* SOCIAL BUTTONS - NEON SNAKE EFFECT (REVISED) */
         .social-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -365,29 +367,55 @@
             overflow: hidden;
             z-index: 1;
             backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
+            border: 1px solid rgba(138, 43, 226, 0.1);
             transform-origin: center;
             outline: none;
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* Neon snake border effect (REVISED) */
+        .social-btn::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border-radius: 18px;
+            background: conic-gradient(
+                from 0deg,
+                transparent 0deg 120deg,
+                var(--secondary) 120deg 180deg,
+                var(--primary) 180deg 240deg,
+                var(--secondary) 240deg 300deg,
+                transparent 300deg 360deg
+            );
+            animation: rotate-snake 4s linear infinite;
+            z-index: -1;
+            filter: blur(4px);
+            opacity: 0.8;
+        }
+
         /* Hover Effect */
         .social-btn:hover {
             transform: translateY(-5px) scale(1.04);
-            box-shadow: 0 15px 35px rgba(138, 43, 226, 0.4), 0 0 15px rgba(0, 229, 255, 0.2);
+            border-color: rgba(138, 43, 226, 0.2);
+        }
+
+        .social-btn:hover::before {
+            animation-duration: 2s;
         }
 
         /* Active/Click Effect */
         .social-btn:active {
             transform: translateY(-2px) scale(0.98);
             transition-duration: var(--transition-fast);
-            box-shadow: 0 5px 20px rgba(138, 43, 226, 0.3);
         }
 
         /* Focus Effect */
         .social-btn:focus {
             outline: none;
-            box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.5), 0 5px 20px rgba(138, 43, 226, 0.4);
+            border-color: rgba(138, 43, 226, 0.4);
         }
 
         /* Ripple Effect */
@@ -407,39 +435,6 @@
         .social-btn:active::after {
             opacity: 1;
             transition-duration: 100ms;
-        }
-
-        .social-btn::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: conic-gradient(
-                from 0deg,
-                transparent,
-                var(--primary),
-                var(--secondary),
-                var(--accent),
-                var(--primary),
-                transparent
-            );
-            border-radius: 18px;
-            z-index: -1;
-            animation: rotate-border 3s linear infinite;
-            opacity: 0.8;
-            transition: opacity var(--transition-normal) ease;
-        }
-
-        .social-btn:hover::before {
-            opacity: 1;
-            animation-duration: 1.5s;
-        }
-
-        @keyframes rotate-border {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
 
         .social-btn .inner-bg {
@@ -478,6 +473,16 @@
         .social-name {
             font-size: 1.2rem;
             font-weight: 600;
+        }
+
+        /* NEON SNAKE ANIMATION */
+        @keyframes rotate-snake {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         /* Footer */
@@ -585,8 +590,16 @@
 
             /* Reduce GPU load on mobile */
             .social-btn::before,
-            .glow-ring {
+            .profile-photo-container::before {
                 animation-duration: 8s;
+            }
+            
+            .social-btn:hover::before {
+                animation-duration: 4s;
+            }
+            
+            .profile-photo-container:hover::before {
+                animation-duration: 6s;
             }
             
             .welcome-content,
@@ -603,6 +616,12 @@
             
             #bg-video {
                 filter: brightness(1.2) contrast(1.3) saturate(1.3);
+            }
+            
+            .social-btn::before,
+            .profile-photo-container::before {
+                opacity: 1;
+                filter: blur(3px);
             }
         }
 
@@ -660,7 +679,6 @@
     <div class="container" id="main-content">
         <section class="hero-section" data-aos="fade-up" data-aos-duration="600" data-aos-delay="100">
             <div class="profile-photo-container" id="profilePhotoContainer" data-aos="zoom-in" data-aos-duration="500">
-                <div class="glow-ring"></div>
                 <img src="https://files.catbox.moe/4avqmx.jpg"
                      alt="Dapid Profile Photo"
                      class="profile-photo"
