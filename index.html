@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dapid Dev | Social Hub</title>
+    <title>Dapid AE02 | Social Hub</title>
     <!-- AOS CSS (Non-blocking) -->
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"></noscript>
@@ -687,7 +687,7 @@
                 </a>
                 
                 <!-- Discord -->
-                <a href="https://discord.com/users/dafid.id" target="_blank" class="social-btn discord"
+                <a href="https://discord.com/users/dapid_ae02" target="_blank" class="social-btn discord"
                    data-aos="fade-up" data-aos-duration="400" data-aos-delay="350">
                     <div class="social-icon">
                         <i class="fab fa-discord"></i>
@@ -757,177 +757,10 @@
             });
         }
         
-        // FIX 1: Profile Image Detection
-        const profilePhoto = document.getElementById('profilePhoto');
-        const profilePhotoContainer = document.getElementById('profilePhotoContainer');
-        const fullscreenOverlay = document.getElementById('fullscreenOverlay');
-        const fullscreenImage = document.getElementById('fullscreenImage');
-        const closeFullscreen = document.getElementById('closeFullscreen');
-        
-        let imageReadyHandled = false;
-        
-        function handleProfileImageReady() {
-            if (imageReadyHandled) return;
-            imageReadyHandled = true;
-            
-            const img = profilePhoto;
-            
-            // Check if image is already loaded (from cache or complete)
-            if (img.complete && img.naturalWidth > 0) {
-                console.log('Profile image ready from cache');
-                enableProfileInteractions();
-            } else {
-                // Wait for image to load
-                img.onload = function() {
-                    console.log('Profile image loaded successfully');
-                    enableProfileInteractions();
-                };
-                
-                img.onerror = function() {
-                    console.log('Profile image failed to load, using gradient fallback');
-                    // Keep the container visible and clickable
-                    enableProfileInteractions();
-                };
-            }
-        }
-        
-        function enableProfileInteractions() {
-            // Make sure AOS can animate
-            if (typeof AOS !== 'undefined') {
-                AOS.refreshHard();
-            }
-            
-            // Ensure click event is always attached
-            profilePhotoContainer.addEventListener('click', openFullscreenOverlay);
-        }
-        
-        function openFullscreenOverlay() {
-            const imgSrc = profilePhoto.src || 'profile.jpg';
-            fullscreenImage.src = imgSrc;
-            fullscreenOverlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-        
-        function closeFullscreenOverlay() {
-            fullscreenOverlay.classList.remove('active');
-            document.body.style.overflow = 'auto';
-        }
-        
-        // FIX 2 & 3: Audio Autoplay System
-        const bgMusic = document.getElementById('bg-music');
-        const audioControl = document.getElementById('audioControl');
-        const audioIcon = audioControl.querySelector('i');
-        
-        // Set default volume (low)
-        bgMusic.volume = 0.25;
-        
-        let audioInteracted = false;
-        let audioInitialized = false;
-        
-        // Load audio state from localStorage
-        const savedAudioState = localStorage.getItem('dapidAudioState');
-        
-        function initAudioSystem() {
-            if (audioInitialized) return;
-            audioInitialized = true;
-            
-            // Update audio control icon
-            function updateAudioIcon() {
-                if (bgMusic.paused) {
-                    audioIcon.className = 'fas fa-volume-mute';
-                    audioControl.classList.remove('playing');
-                } else {
-                    audioIcon.className = 'fas fa-volume-up';
-                    audioControl.classList.add('playing');
-                }
-            }
-            
-            // Toggle audio playback
-            function toggleAudio() {
-                if (bgMusic.paused) {
-                    bgMusic.play().then(() => {
-                        localStorage.setItem('dapidAudioState', 'playing');
-                        updateAudioIcon();
-                    }).catch(e => {
-                        console.log('Audio playback failed:', e);
-                    });
-                } else {
-                    bgMusic.pause();
-                    localStorage.setItem('dapidAudioState', 'paused');
-                    updateAudioIcon();
-                }
-            }
-            
-            // Audio control button click
-            audioControl.addEventListener('click', toggleAudio);
-            
-            // Try to autoplay based on saved state
-            function tryAutoplay() {
-                if (!audioInteracted && savedAudioState === 'playing') {
-                    bgMusic.play().then(() => {
-                        console.log('Audio autoplayed from saved state');
-                        updateAudioIcon();
-                    }).catch(e => {
-                        console.log('Audio autoplay blocked:', e);
-                    });
-                }
-            }
-            
-            // Try once when page is ready
-            setTimeout(tryAutoplay, 500);
-            
-            // Handle user interaction for audio
-            const interactionEvents = ['click', 'scroll', 'touchstart', 'keydown'];
-            
-            function handleUserInteraction() {
-                if (audioInteracted) return;
-                
-                audioInteracted = true;
-                
-                // Remove all interaction listeners
-                interactionEvents.forEach(event => {
-                    document.removeEventListener(event, handleUserInteraction);
-                });
-                
-                // Play audio if it's not already playing
-                if (bgMusic.paused && savedAudioState !== 'paused') {
-                    bgMusic.play().then(() => {
-                        console.log('Audio started via user interaction');
-                        localStorage.setItem('dapidAudioState', 'playing');
-                        updateAudioIcon();
-                    }).catch(e => {
-                        console.log('Audio play failed after interaction:', e);
-                    });
-                }
-            }
-            
-            // Add interaction listeners
-            interactionEvents.forEach(event => {
-                document.addEventListener(event, handleUserInteraction, { once: false });
-            });
-            
-            // Initialize audio icon
-            updateAudioIcon();
-            
-            // Handle audio errors
-            bgMusic.addEventListener('error', function() {
-                console.log('Background music failed to load');
-                audioControl.style.display = 'none';
-            });
-        }
-        
         // Initialize when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
             // Start loading AOS
             loadAOS();
-            
-            // Initialize profile image detection
-            handleProfileImageReady();
-            // Also check on DOMContentLoaded in case image was cached very early
-            setTimeout(handleProfileImageReady, 100);
-            
-            // Initialize audio system
-            initAudioSystem();
             
             // Loading screen removal
             setTimeout(function() {
@@ -950,7 +783,39 @@
             document.querySelector('.video-overlay').style.background = 'linear-gradient(135deg, #0a0a1a 0%, #1a0a2a 100%)';
         });
 
+        // Profile Image Handler
+        const profilePhoto = document.getElementById('profilePhoto');
+        const profilePhotoContainer = document.getElementById('profilePhotoContainer');
+        const fullscreenOverlay = document.getElementById('fullscreenOverlay');
+        const fullscreenImage = document.getElementById('fullscreenImage');
+        const closeFullscreen = document.getElementById('closeFullscreen');
+
+        // Image load success
+        profilePhoto.onload = function() {
+            console.log('Profile image loaded successfully');
+        };
+
+        // Image load error handling
+        profilePhoto.onerror = function() {
+            console.log('Profile image failed to load, using gradient fallback');
+            profilePhoto.style.display = 'none';
+            // Fallback already handled by CSS gradient background
+        };
+
+        // Open fullscreen overlay
+        profilePhotoContainer.addEventListener('click', function() {
+            fullscreenImage.src = profilePhoto.src;
+            fullscreenOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
         // Close fullscreen overlay
+        function closeFullscreenOverlay() {
+            fullscreenOverlay.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close button click
         closeFullscreen.addEventListener('click', closeFullscreenOverlay);
 
         // Click outside image to close
@@ -1026,6 +891,85 @@
             }
         `;
         document.head.appendChild(rippleStyle);
+        
+        // Audio Control System
+        const bgMusic = document.getElementById('bg-music');
+        const audioControl = document.getElementById('audioControl');
+        const audioIcon = audioControl.querySelector('i');
+        
+        // Set default volume (low)
+        bgMusic.volume = 0.25;
+        
+        // Load audio state from localStorage
+        const savedAudioState = localStorage.getItem('dapidAudioState');
+        if (savedAudioState === 'playing') {
+            bgMusic.currentTime = 0;
+            // Don't auto-play - wait for user interaction
+        }
+        
+        // Update audio control icon
+        function updateAudioIcon() {
+            if (bgMusic.paused) {
+                audioIcon.className = 'fas fa-volume-mute';
+                audioControl.classList.remove('playing');
+            } else {
+                audioIcon.className = 'fas fa-volume-up';
+                audioControl.classList.add('playing');
+            }
+        }
+        
+        // Toggle audio playback
+        function toggleAudio() {
+            if (bgMusic.paused) {
+                bgMusic.play().then(() => {
+                    localStorage.setItem('dapidAudioState', 'playing');
+                    updateAudioIcon();
+                }).catch(e => {
+                    console.log('Audio playback failed:', e);
+                });
+            } else {
+                bgMusic.pause();
+                localStorage.setItem('dapidAudioState', 'paused');
+                updateAudioIcon();
+            }
+        }
+        
+        // Audio control button click
+        audioControl.addEventListener('click', toggleAudio);
+        
+        // Enable audio on first user interaction with the page
+        let audioEnabled = false;
+        function enableAudioOnInteraction() {
+            if (!audioEnabled) {
+                audioEnabled = true;
+                
+                // If audio was playing before, resume it
+                if (localStorage.getItem('dapidAudioState') === 'playing') {
+                    bgMusic.play().then(() => {
+                        updateAudioIcon();
+                    }).catch(e => {
+                        console.log('Audio resume failed:', e);
+                    });
+                }
+                
+                // Remove event listeners after first interaction
+                document.removeEventListener('click', enableAudioOnInteraction);
+                document.removeEventListener('touchstart', enableAudioOnInteraction);
+            }
+        }
+        
+        // Listen for first user interaction
+        document.addEventListener('click', enableAudioOnInteraction);
+        document.addEventListener('touchstart', enableAudioOnInteraction);
+        
+        // Initialize audio icon
+        updateAudioIcon();
+        
+        // Handle audio errors
+        bgMusic.addEventListener('error', function() {
+            console.log('Background music failed to load');
+            audioControl.style.display = 'none'; // Hide audio control if music fails
+        });
         
         // Anti-inspect protection (basic)
         document.addEventListener('contextmenu', function(e) {
