@@ -22,6 +22,13 @@
             --transition-fast: 150ms;
             --transition-normal: 250ms;
             --transition-slow: 400ms;
+            --off-white: #E6E6E6;
+            
+            /* VARIABLE TEMPO GLOBAL */
+            --tempo-idle: 6s;
+            --tempo-focus: 7s;
+            --tempo-scan: 1.5s;
+            --tempo-success: 0.8s;
         }
 
         * {
@@ -49,6 +56,22 @@
                 opacity: 1 !important;
                 transform: none !important;
                 transition: none !important;
+            }
+            
+            /* NONAKTIFKAN TEMPO GLOBAL */
+            .snake-top,
+            .snake-bottom,
+            .fingerprint-scan-ring {
+                animation: none !important;
+            }
+            
+            .fingerprint-container.scanning .fingerprint-glow,
+            .fingerprint-container.scanning .fingerprint-scan-line {
+                animation: none !important;
+            }
+            
+            .social-btn::before {
+                animation: none !important;
             }
         }
 
@@ -266,7 +289,7 @@
             padding-top: 20px;
         }
 
-        /* PROFILE PHOTO - NEON SNAKE EFFECT (REVISED) */
+        /* PROFIL – DUAL SNAKE SYSTEM */
         .profile-photo-container {
             position: relative;
             width: 200px;
@@ -278,10 +301,6 @@
 
         .profile-photo-container:hover {
             transform: scale(1.04);
-        }
-
-        .profile-photo-container:hover::before {
-            animation-duration: 4s;
         }
 
         .profile-photo-container:active {
@@ -296,17 +315,31 @@
             position: relative;
             z-index: 2;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.4);
+            transition: box-shadow var(--transition-normal) ease;
         }
 
-        /* Neon snake ring effect (REVISED) */
-        .profile-photo-container::before {
-            content: '';
+        .profile-photo-container:hover .profile-photo {
+            box-shadow: inset 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Dual Snake System - Atas & Bawah */
+        .snake-top,
+        .snake-bottom {
             position: absolute;
             top: -8px;
             left: -8px;
             right: -8px;
             bottom: -8px;
             border-radius: 50%;
+            z-index: 1;
+            filter: blur(4px);
+            opacity: 0.8;
+            transition: all var(--transition-normal) ease;
+            /* TEMPO GLOBAL DIKONTROL OLEH JS */
+        }
+
+        .snake-top {
             background: conic-gradient(
                 from 0deg,
                 transparent 0deg 120deg,
@@ -315,10 +348,28 @@
                 var(--secondary) 240deg 300deg,
                 transparent 300deg 360deg
             );
-            animation: rotate-snake 6s linear infinite;
-            z-index: 1;
-            filter: blur(4px);
-            opacity: 0.8;
+            clip-path: polygon(0% 0%, 100% 0%, 100% 50%, 0% 50%);
+        }
+
+        .snake-bottom {
+            background: conic-gradient(
+                from 180deg,
+                transparent 0deg 120deg,
+                var(--secondary) 120deg 180deg,
+                var(--primary) 180deg 240deg,
+                var(--secondary) 240deg 300deg,
+                transparent 300deg 360deg
+            );
+            clip-path: polygon(0% 50%, 100% 50%, 100% 100%, 0% 100%);
+        }
+
+        @keyframes rotate-snake-clockwise {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .title-section {
@@ -328,16 +379,14 @@
             align-items: center;
         }
 
+        /* HAPUS MAIN TITLE DAPID - diganti dengan elegan single identity */
         .main-title {
-            font-size: 3rem;
-            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 15px;
-            font-weight: 800;
-            letter-spacing: 1.5px;
-            text-shadow: 0 0 20px rgba(138, 43, 226, 0.3);
+            font-size: 0;
+            height: 0;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: none;
         }
 
         .subtitle {
@@ -348,7 +397,37 @@
             line-height: 1.6;
         }
 
-        /* FINGERPRINT SECTION - NEW */
+        /* NAMA PROFIL SATU-SATUNYA - CLEAN & ELEGAN */
+        .profile-name {
+            font-size: 1.8rem;
+            color: var(--off-white);
+            font-weight: 550;
+            letter-spacing: 2.5px;
+            margin-top: 5px;
+            margin-bottom: 25px;
+            opacity: 0;
+            animation: fade-in 0.8s ease 0.4s forwards;
+            position: relative;
+            text-transform: uppercase;
+        }
+
+        @keyframes fade-in {
+            to { opacity: 1; }
+        }
+
+        .profile-name::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 1px;
+            background-color: var(--off-white);
+            opacity: 0.4;
+        }
+
+        /* FINGERPRINT SECTION - IMPROVED */
         .fingerprint-section {
             display: flex;
             flex-direction: column;
@@ -367,6 +446,7 @@
             -webkit-tap-highlight-color: transparent;
             margin-bottom: 10px;
             transition: transform var(--transition-normal) ease;
+            touch-action: manipulation;
         }
 
         .fingerprint-container:hover:not(.scanning) {
@@ -402,6 +482,24 @@
             z-index: 1;
         }
 
+        /* Scan line baru */
+        .fingerprint-scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                var(--secondary) 20%, 
+                var(--primary) 50%, 
+                var(--secondary) 80%, 
+                transparent 100%);
+            opacity: 0;
+            z-index: 3;
+            filter: blur(0.5px);
+        }
+
         .fingerprint-scan-ring {
             position: absolute;
             top: -10px;
@@ -413,7 +511,7 @@
             border-top-color: var(--primary);
             z-index: 0;
             opacity: 0;
-            animation: none;
+            /* TEMPO GLOBAL DIKONTROL OLEH JS */
         }
 
         .fingerprint-hint {
@@ -423,28 +521,53 @@
             margin-top: 8px;
             text-align: center;
             letter-spacing: 1px;
-            transition: opacity var(--transition-normal) ease;
+            transition: all var(--transition-normal) ease;
+            filter: blur(0);
         }
 
-        /* Scanning states */
+        .fingerprint-container:hover .fingerprint-hint {
+            opacity: 1;
+            filter: blur(0.2px);
+        }
+
+        /* Scanning states - NOW CONTROLLED BY JS TEMPO */
         .fingerprint-container.scanning .fingerprint-icon {
             color: var(--secondary);
             text-shadow: 0 0 15px rgba(0, 229, 255, 0.7);
         }
 
-        .fingerprint-container.scanning .fingerprint-glow {
-            opacity: 1;
-            animation: pulse-glow 1s ease-in-out infinite alternate;
-        }
-
-        .fingerprint-container.scanning .fingerprint-scan-ring {
-            opacity: 1;
-            animation: scan-rotate 1.5s linear infinite;
-        }
-
         .fingerprint-container.scan-success .fingerprint-icon {
             color: var(--accent);
             animation: flash-success 0.6s ease;
+        }
+
+        .fingerprint-container.scan-success .fingerprint-glow {
+            animation: glow-shrink 0.8s ease forwards;
+        }
+
+        @keyframes scan-move {
+            0% {
+                top: 0;
+                opacity: 0.2;
+            }
+            50% {
+                opacity: 0.6;
+            }
+            100% {
+                top: 100%;
+                opacity: 0.2;
+            }
+        }
+
+        @keyframes glow-shrink {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
         }
 
         @keyframes pulse-glow {
@@ -478,7 +601,7 @@
             }
         }
 
-        /* POPUP CARD - NEW */
+        /* IDENTITY POPUP - FIXED RESPONSIVE */
         .identity-popup-overlay {
             position: fixed;
             top: 0;
@@ -492,7 +615,8 @@
             justify-content: center;
             z-index: 4000;
             animation: fadeIn 0.3s ease;
-            padding: 20px;
+            padding: 15px;
+            overflow-y: auto;
         }
 
         .identity-popup-overlay.active {
@@ -501,25 +625,28 @@
 
         .identity-popup-card {
             background: linear-gradient(135deg, 
-                rgba(20, 15, 40, 0.9) 0%,
-                rgba(10, 5, 25, 0.95) 100%);
+                rgba(20, 15, 40, 0.95) 0%,
+                rgba(10, 5, 25, 0.98) 100%);
             border: 1px solid var(--glass-border);
             border-radius: 20px;
-            padding: 40px 35px;
-            max-width: 600px;
+            padding: 35px 30px;
             width: 100%;
+            max-width: 600px;
+            max-height: 85vh;
             backdrop-filter: blur(15px);
             position: relative;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4),
                         0 0 0 1px rgba(138, 43, 226, 0.1),
                         0 0 30px rgba(138, 43, 226, 0.15);
             animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            flex-direction: column;
         }
 
         @keyframes slideUp {
             from {
                 opacity: 0;
-                transform: translateY(30px) scale(0.95);
+                transform: translateY(20px) scale(0.98);
             }
             to {
                 opacity: 1;
@@ -531,7 +658,8 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
+            flex-shrink: 0;
         }
 
         .popup-title {
@@ -542,6 +670,7 @@
             background-clip: text;
             font-weight: 700;
             letter-spacing: 1px;
+            line-height: 1.3;
         }
 
         .popup-close {
@@ -571,20 +700,44 @@
         }
 
         .popup-content {
-            min-height: 300px;
             font-size: 1.1rem;
-            line-height: 1.7;
+            line-height: 1.6;
             color: var(--text-light);
-            padding: 10px 0;
             position: relative;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            flex: 1;
+            min-height: 0;
+            padding-right: 5px;
+        }
+
+        .popup-content::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .popup-content::-webkit-scrollbar-track {
+            background: rgba(138, 43, 226, 0.1);
+            border-radius: 10px;
+        }
+
+        .popup-content::-webkit-scrollbar-thumb {
+            background: rgba(138, 43, 226, 0.4);
+            border-radius: 10px;
+        }
+
+        .popup-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(138, 43, 226, 0.6);
         }
 
         .typing-line {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(8px);
             animation: fadeInUp 0.3s ease forwards;
-            min-height: 1.7em;
+            min-height: 1.6em;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
         }
 
         @keyframes fadeInUp {
@@ -614,7 +767,7 @@
             display: none;
         }
 
-        /* SOCIAL BUTTONS - NEON SNAKE EFFECT (REVISED) */
+        /* SOCIAL BUTTONS - IMPROVED WITH IDENTITY */
         .social-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -642,7 +795,7 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Neon snake border effect (REVISED) */
+        /* Directional snake effect dengan transform origin */
         .social-btn::before {
             content: '';
             position: absolute;
@@ -659,13 +812,15 @@
                 var(--secondary) 240deg 300deg,
                 transparent 300deg 360deg
             );
-            animation: rotate-snake 4s linear infinite;
+            animation: rotate-snake-clockwise 4s linear infinite;
             z-index: -1;
             filter: blur(4px);
             opacity: 0.8;
+            transform-origin: center;
+            transition: all var(--transition-normal) ease;
         }
 
-        /* Hover Effect */
+        /* Hover Effect dengan directional feedback */
         .social-btn:hover {
             transform: translateY(-5px) scale(1.04);
             border-color: rgba(138, 43, 226, 0.2);
@@ -675,16 +830,19 @@
             animation-duration: 2s;
         }
 
-        /* Active/Click Effect */
+        /* Active/Click Effect dengan inner pressure */
         .social-btn:active {
             transform: translateY(-2px) scale(0.98);
             transition-duration: var(--transition-fast);
         }
 
-        /* Focus Effect */
-        .social-btn:focus {
-            outline: none;
-            border-color: rgba(138, 43, 226, 0.4);
+        .social-btn.clicking::before {
+            animation-play-state: paused;
+        }
+
+        .social-btn.clicking .inner-bg {
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+            transform: scaleY(0.98);
         }
 
         /* Ripple Effect */
@@ -715,6 +873,7 @@
             background: var(--card-bg);
             border-radius: 15px;
             z-index: -1;
+            transition: all var(--transition-normal) ease;
         }
 
         .social-icon {
@@ -742,16 +901,6 @@
         .social-name {
             font-size: 1.2rem;
             font-weight: 600;
-        }
-
-        /* NEON SNAKE ANIMATION */
-        @keyframes rotate-snake {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
         }
 
         /* Footer */
@@ -825,8 +974,10 @@
 
         /* Responsive Optimizations */
         @media (max-width: 768px) {
-            .main-title {
-                font-size: 2rem;
+            .profile-name {
+                font-size: 1.5rem;
+                letter-spacing: 2px;
+                margin-bottom: 20px;
             }
 
             .subtitle {
@@ -859,16 +1010,13 @@
 
             /* Reduce GPU load on mobile */
             .social-btn::before,
-            .profile-photo-container::before {
+            .snake-top,
+            .snake-bottom {
                 animation-duration: 8s;
             }
             
             .social-btn:hover::before {
                 animation-duration: 4s;
-            }
-            
-            .profile-photo-container:hover::before {
-                animation-duration: 6s;
             }
             
             .welcome-content,
@@ -886,18 +1034,109 @@
                 font-size: 3.5rem;
             }
 
+            /* IDENTITY POPUP RESPONSIVE FIXES */
             .identity-popup-card {
-                padding: 30px 25px;
-                max-width: 90%;
+                padding: 25px 20px;
+                max-width: 95%;
+                max-height: 80vh;
+                border-radius: 16px;
             }
 
             .popup-title {
-                font-size: 1.5rem;
+                font-size: 1.4rem;
             }
 
             .popup-content {
-                font-size: 1rem;
-                min-height: 250px;
+                font-size: 0.95rem;
+                line-height: 1.5;
+            }
+
+            .typing-line {
+                margin-bottom: 15px;
+                min-height: 1.5em;
+            }
+
+            .popup-close {
+                width: 36px;
+                height: 36px;
+                font-size: 1.3rem;
+            }
+
+            .profile-photo-container {
+                width: 180px;
+                height: 180px;
+            }
+
+            .snake-top,
+            .snake-bottom {
+                top: -6px;
+                left: -6px;
+                right: -6px;
+                bottom: -6px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .profile-name {
+                font-size: 1.3rem;
+                letter-spacing: 1.5px;
+            }
+
+            .profile-name::after {
+                width: 60px;
+                bottom: -8px;
+            }
+
+            .identity-popup-card {
+                padding: 20px 15px;
+                max-height: 75vh;
+            }
+
+            .popup-title {
+                font-size: 1.2rem;
+            }
+
+            .popup-content {
+                font-size: 0.9rem;
+            }
+
+            .typing-line {
+                margin-bottom: 12px;
+            }
+
+            .profile-photo-container {
+                width: 160px;
+                height: 160px;
+            }
+
+            .fingerprint-container {
+                width: 60px;
+                height: 60px;
+            }
+
+            .fingerprint-icon {
+                font-size: 3rem;
+            }
+
+            .fingerprint-hint {
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 500px) {
+            .identity-popup-card {
+                max-height: 90vh;
+                max-width: 90%;
+            }
+
+            .popup-content {
+                font-size: 0.9rem;
+                line-height: 1.4;
+            }
+
+            .typing-line {
+                margin-bottom: 10px;
+                min-height: 1.4em;
             }
         }
 
@@ -912,7 +1151,8 @@
             }
             
             .social-btn::before,
-            .profile-photo-container::before {
+            .snake-top,
+            .snake-bottom {
                 opacity: 1;
                 filter: blur(3px);
             }
@@ -926,19 +1166,6 @@
         @media (prefers-color-scheme: dark) {
             #bg-video {
                 filter: brightness(1.05) contrast(1.2) saturate(1.2);
-            }
-        }
-
-        /* Reduced motion preference */
-        @media (prefers-reduced-motion: reduce) {
-            .fingerprint-glow,
-            .fingerprint-scan-ring,
-            .typing-cursor {
-                animation: none !important;
-            }
-            
-            .identity-popup-card {
-                animation: fadeIn 0.3s ease !important;
             }
         }
     </style>
@@ -957,7 +1184,7 @@
     </div>
     <div class="video-overlay"></div>
 
-    <!-- IDENTITY POPUP - NEW -->
+    <!-- IDENTITY POPUP -->
     <div class="identity-popup-overlay" id="identityPopup">
         <div class="identity-popup-card">
             <div class="popup-header">
@@ -1002,6 +1229,10 @@
     <div class="container" id="main-content">
         <section class="hero-section" data-aos="fade-up" data-aos-duration="600" data-aos-delay="100">
             <div class="profile-photo-container" id="profilePhotoContainer" data-aos="zoom-in" data-aos-duration="500">
+                <!-- DUAL SNAKE SYSTEM -->
+                <div class="snake-top"></div>
+                <div class="snake-bottom"></div>
+                
                 <img src="https://files.catbox.moe/4avqmx.jpg"
                      alt="Dapid Profile Photo"
                      class="profile-photo"
@@ -1011,25 +1242,34 @@
             </div>
 
             <div class="title-section">
-                <h1 class="main-title" data-aos="fade-up" data-aos-duration="500" data-aos-delay="200">DAPID</h1>
+                <!-- HAPUS DUPLIKASI: Main title disembunyikan -->
+                <h1 class="main-title" data-aos="fade-up" data-aos-duration="500" data-aos-delay="200"></h1>
+                
+                <!-- NAMA PROFIL SATU-SATUNYA - CLEAN & ELEGAN -->
+                <div class="profile-name" data-aos="fade-up" data-aos-duration="500" data-aos-delay="250">
+                    DAPID | DEV
+                </div>
+                
                 <p class="subtitle" data-aos="fade-up" data-aos-duration="500" data-aos-delay="300">Developer | Student | Tech Enthusiast</p>
                 
-                <!-- FINGERPRINT SECTION - NEW -->
-                <div class="fingerprint-section" data-aos="fade-up" data-aos-duration="600" data-aos-delay="400">
+                <!-- FINGERPRINT SECTION - IMPROVED -->
+                <div class="fingerprint-section" data-aos="fade-up" data-aos-duration="600" data-aos-delay="350">
                     <div class="fingerprint-container" id="fingerprintContainer">
                         <div class="fingerprint-glow"></div>
+                        <div class="fingerprint-scan-line"></div>
                         <div class="fingerprint-scan-ring"></div>
                         <div class="fingerprint-icon">
                             <i class="fas fa-fingerprint"></i>
                         </div>
                     </div>
-                    <p class="fingerprint-hint">Press & hold to scan</p>
+                    <p class="fingerprint-hint" id="fingerprintHint">Press & hold to scan</p>
                 </div>
             </div>
         </section>
 
         <section class="social-links">
             <div class="social-grid">
+                <!-- Button dengan delay mikro berbeda-beda -->
                 <a href="https://instagram.com/dapid_ae02" target="_blank" class="social-btn instagram"
                    data-aos="fade-up" data-aos-duration="400" data-aos-delay="100">
                     <div class="social-icon">
@@ -1042,7 +1282,7 @@
                 </a>
 
                 <a href="https://tiktok.com/@dapid_ae02" target="_blank" class="social-btn tiktok"
-                   data-aos="fade-up" data-aos-duration="400" data-aos-delay="150">
+                   data-aos="fade-up" data-aos-duration="400" data-aos-delay="140">
                     <div class="social-icon">
                         <i class="fab fa-tiktok"></i>
                     </div>
@@ -1052,8 +1292,8 @@
                     <div class="inner-bg"></div>
                 </a>
 
-                <a href="https://dapid.my.id" target="_blank" class="social-btn portfolio"
-                   data-aos="fade-up" data-aos-duration="400" data-aos-delay="200">
+                <a href="https://dapid.pages.dev" target="_blank" class="social-btn portfolio"
+                   data-aos="fade-up" data-aos-duration="400" data-aos-delay="180">
                     <div class="social-icon">
                         <i class="fas fa-briefcase"></i>
                     </div>
@@ -1064,7 +1304,7 @@
                 </a>
 
                 <a href="https://t.me/dapidd_ae02" target="_blank" class="social-btn telegram"
-                   data-aos="fade-up" data-aos-duration="400" data-aos-delay="250">
+                   data-aos="fade-up" data-aos-duration="400" data-aos-delay="220">
                     <div class="social-icon">
                         <i class="fab fa-telegram"></i>
                     </div>
@@ -1075,7 +1315,7 @@
                 </a>
 
                 <a href="https://wa.me/6285185025316" target="_blank" class="social-btn whatsapp"
-                   data-aos="fade-up" data-aos-duration="400" data-aos-delay="300">
+                   data-aos="fade-up" data-aos-duration="400" data-aos-delay="260">
                     <div class="social-icon">
                         <i class="fab fa-whatsapp"></i>
                     </div>
@@ -1086,7 +1326,7 @@
                 </a>
 
                 <a href="https://discord.com/users/dafid.id" target="_blank" class="social-btn discord"
-                   data-aos="fade-up" data-aos-duration="400" data-aos-delay="350">
+                   data-aos="fade-up" data-aos-duration="400" data-aos-delay="300">
                     <div class="social-icon">
                         <i class="fab fa-discord"></i>
                     </div>
@@ -1097,7 +1337,7 @@
                 </a>
 
                 <a href="https://github.com/dapidd12" target="_blank" class="social-btn github"
-                   data-aos="fade-up" data-aos-duration="400" data-aos-delay="400">
+                   data-aos="fade-up" data-aos-duration="400" data-aos-delay="340">
                     <div class="social-icon">
                         <i class="fab fa-github"></i>
                     </div>
@@ -1108,7 +1348,7 @@
                 </a>
 
                 <a href="mailto:dapidaeixa@gmail.com" target="_blank" class="social-btn gmail"
-                   data-aos="fade-up" data-aos-duration="400" data-aos-delay="450">
+                   data-aos="fade-up" data-aos-duration="400" data-aos-delay="380">
                     <div class="social-icon">
                         <i class="fas fa-envelope"></i>
                     </div>
@@ -1129,6 +1369,208 @@
 
     <script>
         // ==============================================
+        // GLOBAL TEMPO SYSTEM - SATU SUMBER KEBENARAN
+        // ==============================================
+        const GlobalTempo = {
+            // STATE: idle → focus → scan → success
+            currentState: 'idle',
+            
+            // TEMPO DURATION (dalam ms)
+            durations: {
+                idle: 6000,      // 6s - Tenang stabil
+                focus: 7000,     // 7s - 16.7% lebih lambat dari idle
+                scan: 1500,      // 1.5s - Sama dengan fingerprint scan-ring
+                success: 800     // 0.8s - Burst cepat
+            },
+            
+            // ELEMEN YANG DIKONTROL
+            elements: {
+                snakeTop: null,
+                snakeBottom: null,
+                fingerprintGlow: null,
+                fingerprintScanLine: null,
+                fingerprintScanRing: null
+            },
+            
+            // INITIALIZE SYSTEM
+            init() {
+                // Get all tempo-controlled elements
+                this.elements.snakeTop = document.querySelector('.snake-top');
+                this.elements.snakeBottom = document.querySelector('.snake-bottom');
+                this.elements.fingerprintGlow = document.querySelector('.fingerprint-glow');
+                this.elements.fingerprintScanLine = document.querySelector('.fingerprint-scan-line');
+                this.elements.fingerprintScanRing = document.querySelector('.fingerprint-scan-ring');
+                
+                // Start with idle tempo
+                this.setState('idle');
+                
+                console.log('🎵 Global Tempo System initialized');
+            },
+            
+            // SET STATE - MENGUBAH SEMUA ANIMASI SEKALIGUS
+            setState(newState) {
+                if (this.currentState === newState) return;
+                
+                // Check for reduced motion preference
+                const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                if (prefersReducedMotion) {
+                    console.log('🎵 Reduced motion enabled, skipping tempo change');
+                    return;
+                }
+                
+                this.currentState = newState;
+                const duration = this.durations[newState];
+                
+                console.log(`🎵 Tempo changed to: ${newState} (${duration}ms)`);
+                
+                // Apply tempo to all elements
+                this.applyTempoToElements(duration);
+                
+                // Apply state-specific behaviors
+                this.applyStateBehavior(newState);
+            },
+            
+            // APPLY TEMPO TO ALL ELEMENTS
+            applyTempoToElements(duration) {
+                // Convert ms to seconds for CSS
+                const durationSeconds = duration / 1000;
+                
+                // Dual Snake System
+                if (this.elements.snakeTop && this.elements.snakeBottom) {
+                    // Snake atas & bawah sinkron dengan tempo yang sama
+                    this.elements.snakeTop.style.animation = `rotate-snake-clockwise ${durationSeconds}s linear infinite`;
+                    this.elements.snakeBottom.style.animation = `rotate-snake-clockwise ${durationSeconds}s linear infinite`;
+                }
+                
+                // Fingerprint Scan Ring
+                if (this.elements.fingerprintScanRing) {
+                    this.elements.fingerprintScanRing.style.animationDuration = `${durationSeconds}s`;
+                }
+            },
+            
+            // APPLY STATE-SPECIFIC BEHAVIOR
+            applyStateBehavior(state) {
+                const fingerprintContainer = document.getElementById('fingerprintContainer');
+                const fingerprintGlow = this.elements.fingerprintGlow;
+                const fingerprintScanLine = this.elements.fingerprintScanLine;
+                const fingerprintScanRing = this.elements.fingerprintScanRing;
+                
+                switch(state) {
+                    case 'idle':
+                        // Fingerprint: glow tipis, scan-ring nonaktif
+                        if (fingerprintGlow) fingerprintGlow.style.opacity = '0';
+                        if (fingerprintScanLine) fingerprintScanLine.style.opacity = '0';
+                        if (fingerprintScanRing) fingerprintScanRing.style.opacity = '0';
+                        
+                        // Stop all animations except snakes (they continue with idle tempo)
+                        if (fingerprintScanLine) fingerprintScanLine.style.animation = 'none';
+                        if (fingerprintGlow) fingerprintGlow.style.animation = 'none';
+                        break;
+                        
+                    case 'focus':
+                        // Fingerprint: glow meningkat, hint text lebih jelas
+                        if (fingerprintGlow) {
+                            fingerprintGlow.style.opacity = '0.3';
+                            fingerprintGlow.style.animation = 'pulse-glow 2s ease-in-out infinite alternate';
+                        }
+                        
+                        // Scan-ring muncul tapi belum aktif
+                        if (fingerprintScanRing) {
+                            fingerprintScanRing.style.opacity = '0.3';
+                        }
+                        break;
+                        
+                    case 'scan':
+                        // Fingerprint: scan aktif, glow stabil
+                        if (fingerprintContainer) {
+                            fingerprintContainer.classList.add('scanning');
+                        }
+                        
+                        if (fingerprintGlow) {
+                            fingerprintGlow.style.opacity = '0.5';
+                            fingerprintGlow.style.animation = 'none'; // Stop pulsing, stay stable
+                        }
+                        
+                        if (fingerprintScanLine) {
+                            fingerprintScanLine.style.opacity = '0.4';
+                            fingerprintScanLine.style.animation = `scan-move ${this.durations.scan / 1000 * 0.8}s ease-in-out infinite`;
+                        }
+                        
+                        if (fingerprintScanRing) {
+                            fingerprintScanRing.style.opacity = '1';
+                            fingerprintScanRing.style.animation = `scan-rotate ${this.durations.scan / 1000}s linear infinite`;
+                        }
+                        break;
+                        
+                    case 'success':
+                        // SUCCESS SEQUENCE - KRITIKAL URUTAN
+                        // 1. Dual snake burst cepat
+                        this.applyTempoToElements(this.durations.success);
+                        
+                        // 2. Fingerprint flash success
+                        if (fingerprintContainer) {
+                            fingerprintContainer.classList.remove('scanning');
+                            fingerprintContainer.classList.add('scan-success');
+                        }
+                        
+                        if (fingerprintGlow) {
+                            fingerprintGlow.style.opacity = '1';
+                            fingerprintGlow.style.animation = 'glow-shrink 0.8s ease forwards';
+                        }
+                        
+                        if (fingerprintScanLine) {
+                            fingerprintScanLine.style.opacity = '0';
+                            fingerprintScanLine.style.animation = 'none';
+                        }
+                        
+                        if (fingerprintScanRing) {
+                            fingerprintScanRing.style.opacity = '0';
+                            fingerprintScanRing.style.animation = 'none';
+                        }
+                        
+                        // 3. Freeze snakes for 140ms
+                        setTimeout(() => {
+                            if (this.elements.snakeTop && this.elements.snakeBottom) {
+                                this.elements.snakeTop.style.animationPlayState = 'paused';
+                                this.elements.snakeBottom.style.animationPlayState = 'paused';
+                            }
+                        }, 50);
+                        
+                        // 4. Return to idle tempo after 140ms
+                        setTimeout(() => {
+                            // Return snakes to normal
+                            if (this.elements.snakeTop && this.elements.snakeBottom) {
+                                this.elements.snakeTop.style.animationPlayState = 'running';
+                                this.elements.snakeBottom.style.animationPlayState = 'running';
+                            }
+                            
+                            // Set state back to idle
+                            this.setState('idle');
+                            
+                            // Remove success class after animation
+                            if (fingerprintContainer) {
+                                setTimeout(() => {
+                                    fingerprintContainer.classList.remove('scan-success');
+                                }, 600);
+                            }
+                        }, 140);
+                        break;
+                }
+            },
+            
+            // GET CURRENT DURATION
+            getCurrentDuration() {
+                return this.durations[this.currentState];
+            },
+            
+            // CHECK IF SYSTEM IS READY
+            isReady() {
+                return this.elements.snakeTop !== null && 
+                       this.elements.snakeBottom !== null;
+            }
+        };
+
+        // ==============================================
         // GLOBAL STATE MANAGEMENT
         // ==============================================
         let appState = {
@@ -1146,16 +1588,11 @@
                 isComplete: false,
                 resourcesLoaded: 0,
                 totalResources: 3 // video, AOS, font awesome
-            },
-            fingerprint: {
-                scanTimer: null,
-                scanDuration: 900, // ms
-                isScanning: false
             }
         };
 
         // ==============================================
-        // FINGERPRINT SCAN SYSTEM - NEW
+        // FINGERPRINT SCAN SYSTEM - IMPROVED WITH STORY & HOLD THRESHOLD
         // ==============================================
         const fingerprintState = {
             lines: [
@@ -1167,54 +1604,167 @@
                 "Aku menempuh pendidikan di SMAN 1 KEMANGKON.",
                 "Aku tertarik pada dunia teknologi, pengembangan web, dan eksplorasi digital.",
                 "Website ini adalah ruang kecil untuk mengekspresikan ide, eksperimen, dan proses belajar.",
+                "Setiap proyek adalah langkah kecil dalam perjalanan panjang.",
+                "Tidak sempurna, tapi terus berkembang.",
                 "Terima kasih sudah menekan fingerprint dan mengenalku lebih dekat."
             ],
             currentLine: 0,
             currentChar: 0,
             isTyping: false,
             typingSpeed: 40, // ms per character
-            lineDelay: 300 // ms between lines
+            lineDelay: 300, // ms between lines
+            
+            // HOLD THRESHOLD SYSTEM
+            holdThreshold: 350, // ms (300-400 sesuai permintaan)
+            pressStartTime: 0,
+            isPressing: false,
+            isScanning: false,
+            holdTimer: null,
+            scanTimer: null,
+            scanDuration: 900 // ms total scan time
         };
 
         function setupFingerprint() {
             const fingerprintContainer = document.getElementById('fingerprintContainer');
+            const fingerprintHint = document.getElementById('fingerprintHint');
             const identityPopup = document.getElementById('identityPopup');
             const closeIdentityPopup = document.getElementById('closeIdentityPopup');
             const identityContent = document.getElementById('identityContent');
 
-            // Start scan on press
-            function startScan(e) {
-                e.preventDefault();
-                if (appState.fingerprint.isScanning) return;
+            // Reset all fingerprint state
+            function resetFingerprintState() {
+                clearTimeout(fingerprintState.holdTimer);
+                clearTimeout(fingerprintState.scanTimer);
                 
-                appState.fingerprint.isScanning = true;
-                fingerprintContainer.classList.add('scanning');
+                fingerprintState.isPressing = false;
+                fingerprintState.isScanning = false;
+                fingerprintState.pressStartTime = 0;
                 
-                appState.fingerprint.scanTimer = setTimeout(scanComplete, appState.fingerprint.scanDuration);
+                // Reset UI state
+                fingerprintContainer.classList.remove('scanning', 'scan-success');
+                GlobalTempo.setState('idle');
+                fingerprintHint.textContent = "Press & hold to scan";
             }
 
-            // Cancel scan on release
-            function cancelScan() {
-                if (!appState.fingerprint.isScanning) return;
+            // POINTERDOWN - Start press detection
+            function onPointerDown(e) {
+                e.preventDefault();
+                if (fingerprintState.isScanning || fingerprintState.isPressing) return;
                 
-                clearTimeout(appState.fingerprint.scanTimer);
-                appState.fingerprint.isScanning = false;
-                fingerprintContainer.classList.remove('scanning');
+                console.log('👆 Fingerprint pointer down');
+                
+                // Start press state
+                fingerprintState.isPressing = true;
+                fingerprintState.pressStartTime = Date.now();
+                
+                // Enter focus tempo
+                GlobalTempo.setState('focus');
+                fingerprintHint.textContent = "Hold to scan...";
+                
+                // Start hold threshold timer
+                fingerprintState.holdTimer = setTimeout(checkHoldThreshold, fingerprintState.holdThreshold);
+            }
+
+            // POINTERUP - End press
+            function onPointerUp() {
+                console.log('👆 Fingerprint pointer up');
+                
+                // Clear hold timer
+                clearTimeout(fingerprintState.holdTimer);
+                
+                // If scanning, cancel scan
+                if (fingerprintState.isScanning) {
+                    console.log('🛑 Scan cancelled (released before completion)');
+                    cancelScan();
+                } else if (fingerprintState.isPressing) {
+                    // Press was too short
+                    console.log('⏱️ Press too short, no scan');
+                    resetFingerprintState();
+                }
+                
+                fingerprintState.isPressing = false;
+            }
+
+            // POINTERCANCEL - Touch/mouse cancelled
+            function onPointerCancel() {
+                console.log('👆 Fingerprint pointer cancelled');
+                cancelScan();
+                resetFingerprintState();
+            }
+
+            // POINTERLEAVE - Pointer left element
+            function onPointerLeave() {
+                console.log('👆 Fingerprint pointer leave');
+                
+                // If still pressing but left element, cancel
+                if (fingerprintState.isPressing) {
+                    console.log('🚫 Pointer left during press, cancelling');
+                    cancelScan();
+                    resetFingerprintState();
+                }
+            }
+
+            // Check if hold threshold reached
+            function checkHoldThreshold() {
+                if (!fingerprintState.isPressing) return;
+                
+                const pressDuration = Date.now() - fingerprintState.pressStartTime;
+                
+                if (pressDuration >= fingerprintState.holdThreshold) {
+                    console.log('✅ Hold threshold reached, starting scan');
+                    startScan();
+                } else {
+                    console.log('❌ Hold threshold not reached yet');
+                }
+            }
+
+            // Start scan (after threshold)
+            function startScan() {
+                if (!fingerprintState.isPressing || fingerprintState.isScanning) return;
+                
+                fingerprintState.isScanning = true;
+                GlobalTempo.setState('scan');
+                fingerprintHint.textContent = "Scanning identity...";
+                
+                console.log('🔍 Scan started');
+                
+                // Start scan completion timer
+                fingerprintState.scanTimer = setTimeout(scanComplete, fingerprintState.scanDuration);
+            }
+
+            // Cancel scan
+            function cancelScan() {
+                if (!fingerprintState.isScanning) return;
+                
+                console.log('🛑 Scan cancelled');
+                
+                clearTimeout(fingerprintState.scanTimer);
+                fingerprintState.isScanning = false;
+                
+                // Flash feedback for cancellation
+                fingerprintHint.textContent = "Scan cancelled";
+                setTimeout(() => {
+                    fingerprintHint.textContent = "Press & hold to scan";
+                }, 300);
+                
+                GlobalTempo.setState('idle');
             }
 
             // Scan completed successfully
             function scanComplete() {
-                appState.fingerprint.isScanning = false;
-                fingerprintContainer.classList.remove('scanning');
-                fingerprintContainer.classList.add('scan-success');
+                if (!fingerprintState.isScanning) return;
                 
-                // Flash effect
-                setTimeout(() => {
-                    fingerprintContainer.classList.remove('scan-success');
-                }, 600);
+                console.log('✅ Scan completed successfully');
                 
-                // Show popup
-                setTimeout(openIdentityPopup, 200);
+                fingerprintState.isScanning = false;
+                fingerprintState.isPressing = false;
+                
+                // Trigger success sequence
+                GlobalTempo.setState('success');
+                fingerprintHint.textContent = "Identity verified";
+                
+                // Show popup after success animation
+                setTimeout(openIdentityPopup, 400);
             }
 
             // Open identity popup with typewriter effect
@@ -1234,6 +1784,12 @@
                 
                 // Stop any ongoing typing
                 fingerprintState.isTyping = false;
+                
+                // Ensure tempo is back to idle
+                GlobalTempo.setState('idle');
+                
+                // Reset fingerprint state after popup close
+                setTimeout(resetFingerprintState, 100);
             }
 
             // Reset typing state
@@ -1315,18 +1871,23 @@
                 }
             }
 
-            // Event listeners for desktop
-            fingerprintContainer.addEventListener('mousedown', startScan);
-            fingerprintContainer.addEventListener('mouseup', cancelScan);
-            fingerprintContainer.addEventListener('mouseleave', cancelScan);
-
-            // Event listeners for mobile
+            // Setup event listeners using Pointer Events API
+            fingerprintContainer.addEventListener('pointerdown', onPointerDown, { passive: false });
+            fingerprintContainer.addEventListener('pointerup', onPointerUp);
+            fingerprintContainer.addEventListener('pointercancel', onPointerCancel);
+            fingerprintContainer.addEventListener('pointerleave', onPointerLeave);
+            
+            // Fallback for older browsers
+            fingerprintContainer.addEventListener('mousedown', onPointerDown, { passive: false });
+            fingerprintContainer.addEventListener('mouseup', onPointerUp);
+            fingerprintContainer.addEventListener('mouseleave', onPointerLeave);
+            
             fingerprintContainer.addEventListener('touchstart', function(e) {
-                startScan(e);
+                onPointerDown(e);
             }, { passive: false });
             
-            fingerprintContainer.addEventListener('touchend', cancelScan);
-            fingerprintContainer.addEventListener('touchcancel', cancelScan);
+            fingerprintContainer.addEventListener('touchend', onPointerUp);
+            fingerprintContainer.addEventListener('touchcancel', onPointerCancel);
 
             // Close popup events
             closeIdentityPopup.addEventListener('click', closeIdentityPopupFunc);
@@ -1347,6 +1908,71 @@
             fingerprintContainer.addEventListener('contextmenu', function(e) {
                 e.preventDefault();
             }, { passive: false });
+            
+            // Initialize
+            resetFingerprintState();
+        }
+
+        // ==============================================
+        // SOCIAL BUTTONS - IMPROVED WITH IDENTITY FEEDBACK
+        // ==============================================
+        function setupSocialButtons() {
+            const socialButtons = document.querySelectorAll('.social-btn');
+            
+            socialButtons.forEach((btn, index) => {
+                // Tambahkan delay mikro yang berbeda untuk setiap button
+                const baseDelay = 100 + (index * 40);
+                btn.style.animationDelay = `${baseDelay}ms`;
+                
+                // Setup directional feedback berdasarkan posisi cursor
+                btn.addEventListener('mousemove', function(e) {
+                    if (!appState.loading.isComplete) return;
+                    
+                    const rect = this.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    // Hitung angle berdasarkan posisi cursor
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const angle = Math.atan2(y - centerY, x - centerX) * (180 / Math.PI);
+                    
+                    // Set transform origin untuk directional effect
+                    this.style.setProperty('--cursor-angle', `${angle}deg`);
+                    this.querySelector('::before')?.style.setProperty('transform-origin', `${x}px ${y}px`);
+                });
+                
+                // Click effect dengan snake freeze dan inner pressure
+                btn.addEventListener('mousedown', function() {
+                    if (!appState.loading.isComplete) return;
+                    
+                    this.classList.add('clicking');
+                    
+                    // Freeze snake animation selama 150ms
+                    setTimeout(() => {
+                        this.classList.remove('clicking');
+                    }, 150);
+                });
+                
+                btn.addEventListener('mouseup', function() {
+                    this.classList.remove('clicking');
+                });
+                
+                // Untuk touch devices
+                btn.addEventListener('touchstart', function() {
+                    if (!appState.loading.isComplete) return;
+                    
+                    this.classList.add('clicking');
+                    
+                    setTimeout(() => {
+                        this.classList.remove('clicking');
+                    }, 150);
+                }, { passive: true });
+                
+                btn.addEventListener('touchend', function() {
+                    this.classList.remove('clicking');
+                }, { passive: true });
+            });
         }
 
         // ==============================================
@@ -1563,19 +2189,73 @@
         }
 
         // ==============================================
+        // DUAL SNAKE CONTROL - NOW INTEGRATED WITH GLOBAL TEMPO
+        // ==============================================
+        function setupDualSnake() {
+            const profileContainer = document.getElementById('profilePhotoContainer');
+
+            // Hover profil mengaktifkan tempo focus
+            profileContainer.addEventListener('mouseenter', () => {
+                GlobalTempo.setState('focus');
+            });
+
+            profileContainer.addEventListener('mouseleave', () => {
+                // Kembali ke idle hanya jika fingerprint tidak sedang fokus
+                const fingerprintContainer = document.getElementById('fingerprintContainer');
+                const isFingerprintHovered = fingerprintContainer.matches(':hover') || 
+                                            fingerprintContainer.classList.contains('scanning');
+                
+                if (!isFingerprintHovered) {
+                    GlobalTempo.setState('idle');
+                }
+            });
+
+            // Click profile - temporary tempo change
+            profileContainer.addEventListener('mousedown', () => {
+                // Temporary fast tempo during click
+                GlobalTempo.applyTempoToElements(GlobalTempo.durations.success);
+            });
+
+            profileContainer.addEventListener('mouseup', () => {
+                // Return to current state tempo
+                GlobalTempo.applyTempoToElements(GlobalTempo.getCurrentDuration());
+            });
+
+            // For touch devices
+            profileContainer.addEventListener('touchstart', () => {
+                GlobalTempo.applyTempoToElements(GlobalTempo.durations.success);
+            }, { passive: true });
+
+            profileContainer.addEventListener('touchend', () => {
+                setTimeout(() => {
+                    GlobalTempo.applyTempoToElements(GlobalTempo.getCurrentDuration());
+                }, 150);
+            }, { passive: true });
+        }
+
+        // ==============================================
         // MAIN INITIALIZATION
         // ==============================================
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM loaded, initializing app');
             
+            // Initialize Global Tempo System FIRST
+            GlobalTempo.init();
+            
             // Load AOS animations
             loadAOS();
             
-            // Setup fingerprint functionality
+            // Setup fingerprint functionality dengan cerita DAN HOLD THRESHOLD
             setupFingerprint();
+            
+            // Setup social buttons dengan identity feedback
+            setupSocialButtons();
             
             // Setup profile image functionality
             setupProfileImage();
+            
+            // Setup dual snake system (now integrated with Global Tempo)
+            setupDualSnake();
             
             // Setup video background
             setupVideoBackground();
